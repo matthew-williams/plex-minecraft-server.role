@@ -1,0 +1,45 @@
+---
+
+- name: install libvirt and QEMU
+  apt:
+    name: "{{ qemu-kvm_packages }}"
+    state: present
+    update_cache: yes
+  tags: [Package Installation]
+
+- name: Make sure qemu-kvm packages do not autoupgrade
+  dpkg_selections:
+    name: "{{ qemu-kvm_packages }}"
+    selection: hold
+  tags: [QEMU-KVM]
+
+- name: enable and start libvirtd
+  service:
+    name: libvirtd
+    state: started
+    enable: yes
+  tags: [QEMU-KVM]
+
+- name: "Configure interfaces and bridge 18.04"
+  template:
+    src: 01-netcfg.j2
+    dest: /etc/netplan/01-netcfg.yaml
+    owner: root
+    group: root
+    mode: 0640
+    backup: yes
+  tags: [Networking]
+  register: netplan_config
+
+- name: Apply netplan changes
+  command: netplan apply
+  tags: [Networking]
+  when: netplan_config.changed
+
+- name: Add br0 bridge to libvirt guest options
+  virt_net:
+    command: define
+    name: br0
+    xml: '{{ lookup("template", "bridge.xml.j2") }}'
+  tags: [Networking]
+# add users to libvirtd group

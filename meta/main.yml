@@ -1,0 +1,10 @@
+---
+galaxy_info:
+  author: matthew-williams
+  description: Install docker containers for plex and minecraft
+  min_ansible_version: 2.4
+  platforms:
+  - name: Ubuntu
+    versions:
+    - 18.04
+dependencies: []
